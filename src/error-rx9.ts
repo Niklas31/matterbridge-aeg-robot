@@ -99,7 +99,7 @@ export class ChangeToModeError extends Error {
         return {
             status:     err instanceof ChangeToModeError ? err.status
                         : ModeBase.ModeChangeStatus[err ? 'GenericFailure' : 'Success'],
-            statusText: err instanceof Error ? err.message.substring(0, 64) : 'Unable to change mode'
+            statusText: err instanceof Error ? err.message.substring(0, 64) : 'Success'
         };
     }
 
@@ -137,7 +137,7 @@ export class SelectAreaError extends Error {
         return {
             status:     err instanceof SelectAreaError ? err.status
                         : ServiceArea.SelectAreasStatus[err ? 'InvalidInMode' : 'Success'],
-            statusText: err instanceof Error ? err.message.substring(0, 256) : 'Unable to select areas'
+            statusText: err instanceof Error ? err.message.substring(0, 256) : 'Success'
         };
     }
 
