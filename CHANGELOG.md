@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.4.0] - 2026-02-06
+### Changed
+* Rebrand fork metadata and documentation to point at the Niklas-maintained package/repo.
+
+### Fixed
+* Avoid RVC Operational State conformance errors by omitting vendor error labels when not allowed.
+
+## [v1.3.10] - 2026-02-06
+### Fixed
+* Avoid RVC Operational State conformance errors by omitting vendor error labels when not allowed.
+
 ## [v1.3.9] - 2026-02-06
 ### Changed
 * Set package author to Niklas and credit original author as contributor.
@@ -191,7 +202,9 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.9...HEAD
+[Unreleased]:       https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.4.0...HEAD
+[v1.4.0]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.10...v1.4.0
+[v1.3.10]:          https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.9...v1.3.10
 [v1.3.9]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.8...v1.3.9
 [v1.3.8]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.7...v1.3.8
 [v1.3.7]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.6...v1.3.7
