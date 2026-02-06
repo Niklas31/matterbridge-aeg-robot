@@ -6,10 +6,12 @@ import { AEGApplianceRX9 } from './aeg-appliance-rx9.js';
 import { Config } from './config-types.js';
 import { MS } from './utils.js';
 import { AEGAPIRX9 } from './aegapi-rx9.js';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 // Timeout waiting for changes, as a multiple of the status polling interval
-const TIMEOUT_REQUEST_ACCEPTED = 10 * MS; // 10 seconds to issue request
+const TIMEOUT_REQUEST_ACCEPTED = 30 * MS; // 30 seconds to issue request
 const TIMEOUT_STATUS_CONFIRMED = 60 * MS; // 1 minute for the appliance to respond
+const STATUS_CONFIRMATION_POLL_INTERVAL = 1 * MS;
 
 // An abstract AEG RX 9 / Electrolux Pure i9 robot controller
 export abstract class AEGApplianceRX9Ctrl<Type extends number | string> {
@@ -112,14 +114,29 @@ export abstract class AEGApplianceRX9Ctrl<Type extends number | string> {
             this.appliance.updateDerivedAndEmit();
 
             // Apply the change
-            const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_REQUEST_ACCEPTED)]);
-            await this.setTarget(target, requestSignal);
-            this.log.info(`Request accepted ${description}`);
+            let requestTimedOut = false;
+            try {
+                const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_REQUEST_ACCEPTED)]);
+                await this.setTarget(target, requestSignal);
+                this.log.info(`Request accepted ${description}`);
+            } catch (cause) {
+                const err = unwrapAbortError(cause);
+                if (err.name !== 'TimeoutError') throw err;
+                requestTimedOut = true;
+                this.log.warn(`Timed out waiting for request acceptance ${description}; waiting for status confirmation`);
+            }
 
             // Start monitoring the status and override with prediction
             this.pending = { target, timeout: Date.now() + TIMEOUT_STATUS_CONFIRMED };
             this.appliance.updateDerivedAndEmit();
             this.appliance.poll?.requestRapid(TIMEOUT_STATUS_CONFIRMED);
+
+            // Fallback: if the cloud accepted the command after the HTTP timeout,
+            // the periodic status stream can still confirm success.
+            if (requestTimedOut) {
+                await this.waitForStatusConfirmation(target, signal);
+                this.log.info(`Status confirmed ${description} after request timeout`);
+            }
 
         } catch (cause) {
             // Cancel any (previous) status override
@@ -127,8 +144,7 @@ export abstract class AEGApplianceRX9Ctrl<Type extends number | string> {
             this.appliance.updateDerivedAndEmit();
 
             // Identify the underlying error
-            let err = cause instanceof Error ? cause : new Error(String(cause));
-            while (err.name === 'AbortError' && err.cause instanceof Error) err = err.cause;
+            const err = unwrapAbortError(cause);
 
             // Map the error type to a description
             const errMap: Record<string, string> = {
@@ -141,6 +157,14 @@ export abstract class AEGApplianceRX9Ctrl<Type extends number | string> {
         } finally {
             // Log the result and clear the pending promise
             this.setInProgress = undefined;
+        }
+    }
+
+    // Wait for polling updates to confirm the target status
+    private async waitForStatusConfirmation(target: Type, signal: AbortSignal): Promise<void> {
+        const waitSignal = AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_STATUS_CONFIRMED)]);
+        while (this.isTargetSet(target) !== true) {
+            await sleep(STATUS_CONFIRMATION_POLL_INTERVAL, undefined, { signal: waitSignal });
         }
     }
 
@@ -182,4 +206,10 @@ export abstract class AEGApplianceRX9Ctrl<Type extends number | string> {
 
     // Override the status while a requested change is pending
     abstract preEmitPatch(target: Type): void;
+}
+
+function unwrapAbortError(cause: unknown): Error {
+    let err = cause instanceof Error ? cause : new Error(String(cause));
+    while (err.name === 'AbortError' && err.cause instanceof Error) err = err.cause;
+    return err;
 }
