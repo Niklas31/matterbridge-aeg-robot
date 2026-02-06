@@ -1,0 +1,121 @@
+{
+    "title": "Matterbridge AEG RX9 / Electrolux Pure i9 Robot Vacuum",
+    "description": "AEG Robot",
+    "type": "object",
+    "required": [
+        "apiKey",
+        "accessToken",
+        "refreshToken"
+    ],
+    "properties": {
+        "name": {
+            "description": "Plugin name",
+            "type": "string",
+            "readOnly": true,
+            "ui:widget": "hidden"
+        },
+        "type": {
+            "description": "Plugin type",
+            "type": "string",
+            "readOnly": true,
+            "ui:widget": "hidden"
+        },
+        "apiKey": {
+            "description": "API Key obtained from the Electrolux Group Developer Portal Dashboard.",
+            "type": "string"
+        },
+        "accessToken": {
+            "description": "Authorization Access Token obtained from the Electrolux Group Developer Portal Dashboard.",
+            "type": "string"
+        },
+        "accessTokenURL": {
+            "description": "An endpoint that can provide an Access Token (used for development/testing).",
+            "type": "string",
+            "ui:widget": "hidden"
+        },
+        "refreshToken": {
+            "description": "Authorization Refresh Token obtained from the Electrolux Group Developer Portal Dashboard.",
+            "type": "string"
+        },
+        "pollIntervalSeconds": {
+            "description": "How often each robot vacuum is polled for status. The recommended value depends on the number of devices being polled, e.g. 30s for a single robot vacuum, increasing to 60s for two, 90s for three, etc.",
+            "type": "integer",
+            "default": 30,
+            "minimum": 20,
+            "maximum": 600
+        },
+        "enableServerRvc": {
+            "description": "Expose each robot vacuum as a standalone Matter node using Matterbridge's 'server' mode. When enabled, each robot vacuum has its own Matter fabric that must be manually paired, ensuring compatibility with Matter controllers such as the Apple Home app. When disabled, all devices are bridged within a single Matter node, which may not function correctly with some Matter controllers.",
+            "type": "boolean",
+            "default": true
+        },
+        "logMapStyle": {
+            "description": "Select how robot vacuum cleaner maps should be displayed in the log at the end of cleans.",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "Off",
+                    "title": "No map logging"
+                },
+                {
+                    "const": "Monospaced",
+                    "title": "Highest quality (requires monospaced font)"
+                },
+                {
+                    "const": "Matterbridge",
+                    "title": "Optimised for Matterbridge frontend"
+                }
+            ],
+            "default": "Matterbridge"
+        },
+        "whiteList": {
+            "description": "Only expose robot vacuum devices listed here, identified by their serial number. Leave empty to expose all devices.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "uniqueItems": true,
+            "selectFrom": "serial",
+            "default": []
+        },
+        "blackList": {
+            "description": "Exclude any robot vacuum devices listed here, identified by their serial number. Leave empty to expose all devices.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "uniqueItems": true,
+            "selectFrom": "serial",
+            "default": []
+        },
+        "debug": {
+            "description": "Capture debug-level logging from this plugin, overriding the Matterbridge global log level setting.",
+            "type": "boolean",
+            "default": false
+        },
+        "debugFeatures": {
+            "description": "Advanced diagnostics: Enable only for troubleshooting or development.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Run API Tests",
+                    "Run Unsafe API Tests",
+                    "Log Endpoint Debug",
+                    "Log API Headers",
+                    "Log API Bodies",
+                    "Log Appliance IDs",
+                    "Log Debug as Info"
+                ]
+            },
+            "default": []
+        },
+        "unregisterOnShutdown": {
+            "description": "Unregister all exposed devices on shutdown (used for development/testing).",
+            "type": "boolean",
+            "default": false,
+            "ui:widget": "hidden"
+        }
+    }
+}

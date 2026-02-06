@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.8] - 2026-02-06
+### Fixed
+* Provide a schema file matching the npm package name so Matterbridge UI shows full config fields.
+
+## [v1.3.7] - 2026-02-06
+### Fixed
+* Fix RVC Operational State list typing for Matterbridge 3.5.x.
+* Remove `matterbridge` from devDependencies to satisfy Matterbridge plugin checks.
+
 ## [v1.3.6] - 2026-02-03
 ### Fixed
 * Avoid RVC Operational State initialization errors on newer Matterbridge versions by using only standard operational states.
@@ -177,7 +186,9 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.6...HEAD
+[Unreleased]:       https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.8...HEAD
+[v1.3.8]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.7...v1.3.8
+[v1.3.7]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.6...v1.3.7
 [v1.3.6]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.5...v1.3.6
 [v1.3.5]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.4...v1.3.5
 [v1.3.4]:           https://github.com/Niklas31/matterbridge-aeg-robot/compare/v1.3.3...v1.3.4
