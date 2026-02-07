@@ -74,8 +74,10 @@ if (errors.length) throw new Error(`Inconsistent activity mapping tables:\n${err
 
 // Minimum interval between successive commands
 const COMMAND_INTERVAL = 5 * MS; // 5 seconds
-const CUSTOMPLAY_RETRY_DELAY = 20 * MS; // wait one poll cycle before retrying
 const CUSTOMPLAY_RETRY_REQUEST_TIMEOUT = 20 * MS;
+const CUSTOMPLAY_RETRY_MIN_DELAY = 20 * MS;
+const CUSTOMPLAY_RETRY_MAX_DELAY = 120 * MS;
+const CUSTOMPLAY_RETRY_GRACE_DELAY = 5 * MS;
 
 // Robot controller for changing the activity
 export class AEGApplianceRX9CtrlActivity extends AEGApplianceRX9Ctrl<ActivityRX9> {
@@ -179,11 +181,20 @@ export class AEGApplianceRX9CtrlActivity extends AEGApplianceRX9Ctrl<ActivityRX9
         customPlay: NonNullable<AEGApplianceRX9['customPlay']>
     ): Promise<void> {
         if (target !== 'Clean') return;
-        await setTimeout(CUSTOMPLAY_RETRY_DELAY);
+        // Wait at least one configured poll period so we do not retry before
+        // the first post-command status snapshot has a chance to arrive.
+        const retryDelay = Math.min(
+            CUSTOMPLAY_RETRY_MAX_DELAY,
+            Math.max(
+                CUSTOMPLAY_RETRY_MIN_DELAY,
+                this.config.pollIntervalSeconds * MS + CUSTOMPLAY_RETRY_GRACE_DELAY
+            )
+        );
+        await setTimeout(retryDelay);
         if (retrySequence !== this.customPlayRetrySequence) return;
         if (this.isTargetSet('Clean') === true) return;
 
-        this.log.warn(`CustomPlay not confirmed after ${formatMilliseconds(CUSTOMPLAY_RETRY_DELAY, 1)}; retrying once`);
+        this.log.warn(`CustomPlay not confirmed after ${formatMilliseconds(retryDelay, 1)}; retrying once`);
         try {
             const retrySignal = AbortSignal.timeout(CUSTOMPLAY_RETRY_REQUEST_TIMEOUT);
             await this.api.sendCustomPlayCommand(customPlay.persistentMapId, customPlay.zones, retrySignal);

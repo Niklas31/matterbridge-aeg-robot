@@ -168,7 +168,8 @@ export class BabelStaticRX9 implements EndpointInformationRX9 {
 
     // Does the appliance support 'smart' power levels (RX9.2 only)
     get smartPowerCapable(): boolean {
-        return this.appliance.capabilities.includes('PowerLevels');
+        // Accept both legacy and current spellings from different API payloads.
+        return this.appliance.capabilities.some(capability => capability.toLowerCase() === 'powerlevels');
     }
 
     // Attempt to map the PNC to the model family and model number
