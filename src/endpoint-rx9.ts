@@ -123,6 +123,9 @@ export class EndpointRX9 extends MatterbridgeEndpoint {
             this.log.info('Patching Basic Information cluster attributes');
             await this.patchBasicInformationClusterServer(this.serverNode);
         }
+
+        // Ensure persisted state from older releases does not keep deprecated clean modes.
+        await this.normalizeRvcCleanModes();
     }
 
     // Patch the Basic Information cluster attributes with correct values
@@ -241,43 +244,59 @@ export class EndpointRX9 extends MatterbridgeEndpoint {
 
     // Create the RVC Clean Mode cluster
     createRvcCleanModeClusterServer(): this {
-        const tag = RvcCleanMode.ModeTag;
+        const supportedModes = this.getRvcCleanSupportedModes();
         this.behaviors.require(RvcCleanModeServerRX9.enable({
             commands: {
                 changeToMode: true
             }
         }), {
             // Constant attributes
-            supportedModes: [{
-                label:      'Quiet Cleaning',
-                mode:       RvcCleanModeRX9.Quiet,
-                modeTags:   [
-                    { value: tag.Vacuum },
-                    { value: tag.Quiet },
-                    { value: tag.LowNoise },
-                    { value: tag.LowEnergy },
-                    { value: tag.Min }
-                ]
-            }, {
-                label:      'Smart Cleaning',
-                mode:       RvcCleanModeRX9.Smart,
-                modeTags:   [
-                    { value: tag.Vacuum },
-                    { value: tag.Auto }
-                ]
-            }, {
-                label:      'Power Cleaning',
-                mode:       RvcCleanModeRX9.Power,
-                modeTags:   [
-                    { value: tag.Vacuum },
-                    { value: tag.Max },
-                    { value: tag.DeepClean }
-                ]
-            }].filter(mode => this.information.smartPowerCapable || mode.mode !== RvcCleanModeRX9.Smart),
+            supportedModes,
             // Variable attributes (with dummy defaults)
-            currentMode:    RvcCleanModeRX9.Quiet
+            currentMode:    supportedModes[0]?.mode ?? RvcCleanModeRX9.Quiet
         });
         return this;
+    }
+
+    private getRvcCleanSupportedModes(): {
+        label: string;
+        mode: number;
+        modeTags: { value: number }[];
+    }[] {
+        const tag = RvcCleanMode.ModeTag;
+        return [{
+            label:      'Quiet Cleaning',
+            mode:       RvcCleanModeRX9.Quiet,
+            modeTags:   [
+                { value: tag.Vacuum },
+                { value: tag.Quiet },
+                { value: tag.LowNoise },
+                { value: tag.LowEnergy },
+                { value: tag.Min }
+            ]
+        }, {
+            label:      'Smart Cleaning',
+            mode:       RvcCleanModeRX9.Smart,
+            modeTags:   [
+                { value: tag.Vacuum },
+                { value: tag.Auto }
+            ]
+        }, {
+            label:      'Power Cleaning',
+            mode:       RvcCleanModeRX9.Power,
+            modeTags:   [
+                { value: tag.Vacuum },
+                { value: tag.Max },
+                { value: tag.DeepClean }
+            ]
+        }].filter(mode => this.information.smartPowerCapable || mode.mode !== RvcCleanModeRX9.Smart);
+    }
+
+    private async normalizeRvcCleanModes(): Promise<void> {
+        const clusterId = RvcCleanMode.Cluster.id;
+        const supportedModes = this.getRvcCleanSupportedModes();
+        await this.updateAttribute(clusterId, 'supportedModes', supportedModes, this.log);
+        await this.updateAttribute(clusterId, 'currentMode', supportedModes[0]?.mode ?? RvcCleanModeRX9.Quiet, this.log);
     }
 
     // Create the RVC Operational State cluster

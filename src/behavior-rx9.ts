@@ -228,9 +228,11 @@ export class ServiceAreaServerRX9 extends ServiceAreaBehavior {
         const { device } = this.agent.get(BehaviorRX9).state;
         const { log } = device;
         try {
-            // Remove any duplicated areas from the list
-            log.info(`Service Area command: SelectAreas ${formatList(newAreas.map(id => String(id)))}`);
-            newAreas = [...new Set(newAreas)];
+            // Normalize request and remove duplicates.
+            // Empty list is valid and means "clear selection / all areas".
+            const requestedAreas = Array.isArray(newAreas) ? newAreas : [];
+            log.info(`Service Area command: SelectAreas ${formatList(requestedAreas.map(id => String(id)))}`);
+            newAreas = [...new Set(requestedAreas)];
 
             // Check whether it is a valid request
             const maps = new Set<number | null>();
@@ -241,8 +243,13 @@ export class ServiceAreaServerRX9 extends ServiceAreaBehavior {
             }
 
             // If all areas are specified then treat it as an empty list
-            if (newAreas.length === this.state.supportedAreas.length) newAreas = [];
-            else if (maps.size !== 1) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
+            if (!newAreas.length) {
+                // keep empty selection
+            } else if (newAreas.length === this.state.supportedAreas.length) {
+                newAreas = [];
+            } else if (maps.size !== 1) {
+                throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
+            }
 
             // Attempt to select the areas
             await device.executeCommand('SelectAreas', newAreas);
