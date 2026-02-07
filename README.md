@@ -271,7 +271,7 @@ AEG, Electrolux, and Zanussi are trademarks of [AB Electrolux](https://www.elect
 ### ISC License (ISC)
 
 <details>
-<summary>Copyright © 2025 Alexander Thoukydides</summary>
+<summary>Copyright © 2025 Alexander Thoukydides and © 2025-2026 Niklas</summary>
 
 > Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 >
